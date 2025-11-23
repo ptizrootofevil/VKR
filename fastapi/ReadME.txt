@@ -1,3 +1,2 @@
-docker build -t my-fastapi-app .
-docker run -d -p 8000:8000 --name fastapi-container my-fastapi-app
-docker logs fastapi-container
+в убунту: clickhouse-server start
+в командную строку: uvicorn main:app --reload

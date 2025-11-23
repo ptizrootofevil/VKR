@@ -1,8 +1,13 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Form, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from typing import Annotated
 import clickhouse_connect
 
 app = FastAPI()
+
+templates = Jinja2Templates(directory="templates")
 
 # Чтение переменных окружения
 CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST", "localhost")
@@ -11,7 +16,7 @@ CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER", "default")
 CLICKHOUSE_PASSWORD = os.getenv("CLICKHOUSE_PASSWORD", "9y6bH73d")
 
 # Подключение к ClickHouse
-client = clickhouse_connect.get_client( #host='localhost', port=8123, username='default', password='9y6bH73d')
+client = clickhouse_connect.get_client(
     host=CLICKHOUSE_HOST,
     port=CLICKHOUSE_PORT,
     username=CLICKHOUSE_USER,
@@ -20,28 +25,37 @@ client = clickhouse_connect.get_client( #host='localhost', port=8123, username='
 
 @app.get("/")
 async def root():
-    # Пример запроса к ClickHouse
     result = client.query("SELECT version()")
     version = result.result_rows[0][0]
     return {"message": "FastAPI connected to ClickHouse", "clickhouse_version": version}
 
-@app.on_event("startup")
-async def startup_event():
-    # Создание тестовой таблицы при старте
-    client.command("""
-        CREATE TABLE IF NOT EXISTS test_table (
-            id UInt32,
-            name String
-        ) ENGINE = MergeTree()
-        ORDER BY id
-    """)
+@app.get("/insert", response_class=HTMLResponse)
+async def insert_data(request:Request):
 
-@app.get("/insert")
-async def insert_data():
-    client.command("INSERT INTO test_table (id, name) VALUES (1, 'Test')")
-    return {"message": "Data inserted"}
+    return templates.TemplateResponse("insert.html", {"request" : request})
 
-@app.get("/select")
-async def select_data():
-    result = client.query("SELECT * FROM test_table")
-    return {"data": result.result_rows}
+@app.post("/insert")
+async def insert_data_post(
+    id: Annotated[int, Form()],
+    name: Annotated[str, Form()],
+    request:Request
+):
+    ic = client.create_insert_context(table='test_table')
+    ic.data = [[id, name]]
+    client.insert(context=ic)
+
+    return templates.TemplateResponse("insert_complete.html", {"request" : request, 
+                                                                "id" : id, 
+                                                                "name" : name})
+
+@app.get("/select", response_class=HTMLResponse)
+async def select_data(request:Request):
+    rows = []
+
+    with client.query_row_block_stream("SELECT id, name from test_table order by id") as stream:
+        for block in stream:
+            for rec in block:
+                rows.append([rec[0], rec[1]])
+    
+    return templates.TemplateResponse("select.html", {"request" : request,
+                                                      "records" : rows} )

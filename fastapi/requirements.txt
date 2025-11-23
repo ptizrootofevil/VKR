@@ -2,3 +2,6 @@ fastapi
 uvicorn
 clickhouse_connect
 httpx
+typing
+python-multipart
+Jinja2

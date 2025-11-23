@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Все записи</title>
+    <meta charset="utf-8">
+    <style>
+        body {font-family: Arial, sans-serif; padding: 40px;}
+        table {width: 100%; border-collapse: collapse; margin-top: 20px;}
+        th, td {border: 1px solid #ccc; padding: 12px; text-align: left;}
+        th {background: #f0f0f0;}
+    </style>
+</head>
+<body>
+    <h2>Записи в базе</h2>
+    <table>
+        <thead>
+            <tr><th>ID</th><th>Name</th></tr>
+        </thead>
+        <tbody>
+            {% if records %}
+                {% for item in records %}
+                    <tr>
+                        <th>{{ item[0] }}</th>
+                        <th>{{ item[1] }}</th>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <p>Пока нет ни одной записи.</p>
+            {% endif %}
+        </tbody>
+    </table>
+    <hr>
+    <a href="/insert">← Добавить новую запись</a>
+</body>
+</html>
