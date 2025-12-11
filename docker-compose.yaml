@@ -9,6 +9,7 @@ services:
       - "9000:9000" # Native TCP интерфейс
     volumes:
       - clickhouse-data:/var/lib/clickhouse
+      - ./clickhouse-init:/docker-entrypoint-initdb.d/
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
       interval: 3s

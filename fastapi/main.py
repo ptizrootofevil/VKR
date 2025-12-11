@@ -59,3 +59,11 @@ async def select_data(request:Request):
     
     return templates.TemplateResponse("select.html", {"request" : request,
                                                       "records" : rows} )
+
+
+
+@app.get("/debug/tables")
+async def debug_tables():
+    # Показывает все таблицы
+    result = client.query("SHOW TABLES FROM default")
+    return {"tables": result.result_rows}
