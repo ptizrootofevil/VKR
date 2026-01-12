@@ -5,3 +5,4 @@ httpx
 typing
 python-multipart
 Jinja2
+pytest

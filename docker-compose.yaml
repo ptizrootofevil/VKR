@@ -29,7 +29,7 @@ services:
 
   fastapi:
     build:
-      context: ./fastapi
+      context: ./api
       dockerfile: Dockerfile
     container_name: fastapi-app
     ports:
@@ -42,6 +42,26 @@ services:
       - CLICKHOUSE_PORT=8123
       - CLICKHOUSE_USER=default
       - CLICKHOUSE_PASSWORD=9y6bH73d
+    networks:
+      - app-network
+
+  tests:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    environment:
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=9y6bH73d
+      - PYTEST_ADDOPTS=--tb=short -v
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: ["pytest", "tests", "-v", "--disable-warnings"]
     networks:
       - app-network
 
