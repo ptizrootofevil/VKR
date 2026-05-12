@@ -23,15 +23,16 @@ client = clickhouse_connect.get_client(
     password=CLICKHOUSE_PASSWORD
 )
 
-@app.get("/")
-async def root():
+@app.get("/", response_class=HTMLResponse)
+async def root(request:Request):
     result = client.query("SELECT version()")
     version = result.result_rows[0][0]
-    return {"message": "FastAPI connected to ClickHouse", "clickhouse_version": version}
+    return templates.TemplateResponse(request=request,
+                                      name="login.html",
+                                      context={"version": version})
 
 @app.get("/insert", response_class=HTMLResponse)
 async def insert_data(request:Request):
-
     return templates.TemplateResponse("insert.html", {"request" : request})
 
 @app.post("/insert")
